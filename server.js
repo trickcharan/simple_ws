@@ -41,10 +41,29 @@ const server = http.createServer((request, response) => {
 const webSocketServer = new WebSocketServer({ noServer: true });
 
 webSocketServer.on("connection", (socket) => {
-  socket.send("WebSocket connected");
+  socket.once("message", (message) => {
+    try {
+      const request = JSON.parse(message.toString());
 
-  socket.on("message", (message) => {
-    socket.send(`Echo: ${message}`);
+      if (!request.customer_org_id) {
+        throw new Error("customer_org_id is required");
+      }
+
+      const response = {
+        virtual_agents: loadVirtualAgents().map((agent) => ({
+          id: agent.virtual_agent_id,
+          name: agent.virtual_agent_name,
+        })),
+      };
+
+      socket.send(JSON.stringify(response), () => {
+        socket.close(1000, "Response sent");
+      });
+    } catch (error) {
+      socket.send(JSON.stringify({ error: error.message }), () => {
+        socket.close(1008, "Invalid request");
+      });
+    }
   });
 });
 
