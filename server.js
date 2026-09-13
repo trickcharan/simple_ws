@@ -70,7 +70,7 @@ webSocketServer.on("connection", (socket) => {
 server.on("upgrade", (request, socket, head) => {
   const { pathname } = new URL(request.url, "http://localhost");
 
-  if (pathname !== "/ws") {
+  if (pathname !== "/ws" && pathname !== "/v1/listVirtualAgents") {
     socket.destroy();
     return;
   }
